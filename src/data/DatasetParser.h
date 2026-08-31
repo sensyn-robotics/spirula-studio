@@ -127,6 +127,11 @@ struct DatasetParserConfig {
     float       train_split_fraction = 0.9f;
     int         eval_interval = 8;
 
+    // Overrides eval_mode when non-empty: a JSON file with frames.train /
+    // frames.test (image basenames). Train keeps frames.train, eval keeps
+    // frames.test (by stem); val/unlisted are dropped from both.
+    std::string split_file;
+
     // Which side of that split to return. "train" is what training wants;
     // "eval" returns the complement. Everything derived from the camera set
     // -- train_frame_scale, train_to_normalized, the outlier filter -- is
