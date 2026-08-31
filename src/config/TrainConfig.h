@@ -175,6 +175,7 @@ inline bool train_choices_free_form(const char* choices) {
     X(std::string, progressive_splat_budget_schedule, "", "dataset", "advanced", "none") \
     X(std::string, eval_mode, "all", "dataset", "advanced", "fraction|filename|interval|all") \
     X(int, eval_interval, 8, "dataset", "advanced", "")                      \
+    X(std::string, split_file, "", "dataset", "advanced", "none")            \
     X(float, train_split_fraction, 0.9f, "dataset", "advanced", "")          \
     X(float, validation_fraction, 0.0f, "dataset", "expert", "")             \
     X(bool, warp_to_pinhole, false, "dataset", "advanced", "")               \
@@ -426,7 +427,7 @@ struct TrainConfig {
     X(exif_orientation) X(orientation_method) X(center_method) X(auto_scale_poses) \
     X(outlier_threshold) X(scene_center) X(scene_center_threshold) X(train_frame) X(eval_mode) \
     X(train_split_fraction) \
-    X(eval_interval) X(depth_unit_scale_factor) X(validation_fraction) \
+    X(eval_interval) X(split_file) X(depth_unit_scale_factor) X(validation_fraction) \
     X(warp_to_pinhole) X(warp_spherical_to_pinhole) X(warp_face_fit) \
     X(warp_back_face) \
     X(load_masks) \

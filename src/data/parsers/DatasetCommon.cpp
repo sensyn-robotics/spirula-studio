@@ -3,6 +3,7 @@
 // nothing here may reach the engine or the host camera math.
 
 #include "data/DatasetParser.h"
+#include "data/Json.h"
 #include "data/SourceCamera.h"
 #include "i18n/catalog/Data.h"
 #include "sfm/core/Exif.h"
@@ -201,6 +202,24 @@ static std::vector<int64_t> linspace_indices(int64_t n, int64_t count) {
 std::vector<int64_t> train_subset(int64_t n, const std::vector<std::string>& names,
                                   const DatasetParserConfig& cfg) {
     std::vector<int64_t> keep;
+    if (!cfg.split_file.empty()) {
+        // Externally frozen split: keep frames.train (train) or frames.test
+        // (eval), matched by filename stem; drop val/unlisted from both. This
+        // bypasses the eval_mode chain and its train/eval complement logic.
+        JsonValue root = json_parse_file(cfg.split_file);
+        const JsonValue* frames = root.find("frames");
+        const char* key = (cfg.split == "eval") ? "test" : "train";
+        std::set<std::string> want;
+        if (const JsonValue* a = frames ? frames->find(key) : nullptr)
+            for (const JsonValue& v : a->arr)
+                want.insert(fs::path(v.as_string()).stem().string());
+        for (int64_t i = 0; i < n; i++)
+            if (want.count(fs::path(names[i]).stem().string())) keep.push_back(i);
+        if (keep.empty() && cfg.split != "eval")
+            throw std::runtime_error("split_file matched no training images: " +
+                                     cfg.split_file);
+        return keep;
+    }
     if (cfg.eval_mode == "all") {
         keep.resize(n);
         for (int64_t i = 0; i < n; i++) keep[i] = i;

@@ -2006,6 +2006,12 @@ SS_MSG(eval_interval_help,
        "оставляют больше изображений для обучения."),
     TR("eval_mode `interval` iken her N görüntüde birini ayırır. Büyük değerler "
        "eğitime daha çok görüntü bırakır."));
+SS_MSG_EN(split_file, "Split file");
+SS_MSG_EN(split_file_help,
+    "Path to a JSON file with frames.train / frames.test (image basenames). "
+    "When set it overrides eval_mode: train on frames.train, hold out "
+    "frames.test, and drop everything else. Used to evaluate against an "
+    "externally frozen train/test split.");
 
 SS_MSG(train_split_fraction,
     EN("Training share"), JA("学習に使う割合"), ZH_HANS("训练集比例"),

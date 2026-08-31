@@ -985,6 +985,7 @@ void TrainerSession::load_dataset() {
     pcfg.validation_fraction  = cfg.validation_fraction;
     pcfg.eval_mode            = cfg.eval_mode;
     pcfg.eval_interval        = cfg.eval_interval;
+    pcfg.split_file           = cfg.split_file;
     pcfg.train_split_fraction = cfg.train_split_fraction;
     pcfg.outlier_threshold    = cfg.outlier_threshold;
     pcfg.center_mode          = cfg.scene_center;
@@ -2004,8 +2005,9 @@ void quantize_8bit(std::vector<float>& rgb) {
 }  // namespace
 
 void TrainerSession::eval(const std::function<void(const EvalProgress&)>& on_progress) {
-    // eval_mode "all" trains on every frame, so nothing is held out.
-    if (cfg.eval_mode == "all") return;
+    // eval_mode "all" trains on every frame, so nothing is held out -- unless
+    // a split_file names an explicit held-out test set.
+    if (cfg.eval_mode == "all" && cfg.split_file.empty()) return;
 
     // Re-parse the held-out side of the split over all frames, so its
     // normalization exactly matches the images training saw.
@@ -2019,6 +2021,7 @@ void TrainerSession::eval(const std::function<void(const EvalProgress&)>& on_pro
     pcfg.validation_fraction  = 0.0f;      // no early-stop holdout inside eval
     pcfg.eval_mode            = cfg.eval_mode;
     pcfg.eval_interval        = cfg.eval_interval;
+    pcfg.split_file           = cfg.split_file;
     pcfg.train_split_fraction = cfg.train_split_fraction;
     pcfg.outlier_threshold    = cfg.outlier_threshold;
     // The mode `auto` resolved to for training, so eval cannot decide differently.
@@ -2353,6 +2356,14 @@ void TrainerSession::eval(const std::function<void(const EvalProgress&)>& on_pro
     for (const auto& [k, v] : avg)
         mf << ",\n    \"avg_" << k << "\": " << v;
     mf << ",\n    \"num_eval_images\": " << per_image.begin()->second.size();
+    // The per-image lists above are in eval-camera (== eval-render-%05d.png)
+    // order; emit the matching filenames so an external scorer can pair each
+    // render with its ground truth without reconstructing the sort.
+    mf << ",\n    \"eval_image_names\": [";
+    for (int64_t i = 0; i < eds.num_cameras; i++)
+        mf << (i ? ", " : "") << "\""
+           << fs::path(eds.image_filenames[i]).filename().string() << "\"";
+    mf << "]";
     // Per-run training stats: a benchmark launches each scene as its own
     // process, so metrics.json is the only place it can read these.
     mf << ",\n    \"training_time\": " << training_time_s;
